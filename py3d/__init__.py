@@ -17,7 +17,13 @@ def _read_asciiz(f, encoding="utf-8"):
 
     bts = b""
     while b"\0" not in bts:
-        bts += f.read(1024)
+        chunk = f.read(1024)
+        if not chunk:
+            raise ValueError(
+                "unterminated asciiz string starting at offset %d: reached "
+                "EOF after %d bytes without a NUL terminator - the file is "
+                "truncated or not a valid MLOD" % (pos, len(bts)))
+        bts += chunk
     bts = bts[:bts.index(b"\0")]
 
     f.seek(pos + len(bts) + 1)
