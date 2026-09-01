@@ -7,7 +7,7 @@ import pytest
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 FORK_ROOT = os.path.dirname(TESTS_DIR)
 
-# El fork manda sobre cualquier py3d de site-packages; tests importables.
+# This fork wins over any py3d in site-packages; tests stay importable.
 sys.path.insert(0, TESTS_DIR)
 sys.path.insert(0, FORK_ROOT)
 

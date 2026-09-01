@@ -5,11 +5,11 @@ import hashlib
 import io
 import struct
 
-FRAC = 1.0 / 255.0  # resolucion del encoding fraccional de weights
+FRAC = 1.0 / 255.0  # resolution of the fractional weight encoding
 
 
 def f32(x):
-    """Round-trip float64 -> float32 (lo que sobrevive a struct 'f')."""
+    """Round-trip float64 -> float32: what survives struct 'f'."""
     return struct.unpack("f", struct.pack("f", x))[0]
 
 
@@ -46,9 +46,10 @@ def _assert_weight(expected, got, ctx):
 def assert_sem_inv(m, model, data=None):
     """Write -> reopen -> invariants against the in-memory model.
 
-    Counts por LOD, resolucion (f32), coords (f32), caras (vertices,
-    texture, material, uv), selections (nombres, membership POSICIONAL,
-    weights int exactos / fraccionales +-1/255), properties, masa S+-1e-3.
+    Per LOD: counts, resolution (f32), coordinates (f32), faces
+    (vertices, texture, material, uv), selections (names, POSITIONAL
+    membership, exact integer weights or fractional ones to +-1/255),
+    properties, and total mass to +-1e-3.
     """
     if data is None:
         data = write_bytes(model)

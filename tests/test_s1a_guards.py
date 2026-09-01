@@ -12,7 +12,7 @@ from helpers import read_p3d, write_bytes
 # ---- Selection constructor -------------------------------------------------------------
 
 def test_q1_neg_selection_noargs_raises_actionable(fork):
-    """Q1-NEG: Selection() sin args -> TypeError con mensaje guia."""
+    """Selection() with no arguments raises TypeError with a guiding message."""
     with pytest.raises(TypeError) as ei:
         fork.Selection()
     msg = str(ei.value)
@@ -20,7 +20,8 @@ def test_q1_neg_selection_noargs_raises_actionable(fork):
 
 
 def test_q1_neg_upstream_parity(upstream):
-    """Paridad documental: upstream tambien rechaza el no-arg (firma posicional)."""
+    """For the record: upstream rejects the no-arg form too, through its
+    positional signature."""
     with pytest.raises(TypeError):
         upstream.Selection()
 
@@ -34,7 +35,7 @@ def test_q1_pos_factory_registers_and_roundtrips(fork):
     assert sel.all_points is lod.points and sel.all_faces is lod.faces
     sel.faces[lod.faces[0]] = 1
     sel.faces[lod.faces[2]] = 1
-    # get-or-create: segunda llamada devuelve la MISMA selection
+    # get-or-create: a second call returns the SAME selection
     assert lod.new_selection("lf_extra") is sel
 
     reread = read_p3d(fork, write_bytes(p3d))
@@ -48,7 +49,8 @@ def test_q1_pos_factory_registers_and_roundtrips(fork):
 # ---- selection weights --------------------------------------------------------------
 
 def test_w_pos_weights_normalized(fork):
-    """W-POS: {1, 1.0, 0.5} -> round-trip con 1.0 coercionado y 0.5 fraccional."""
+    """{1, 1.0, 0.5} round-trips with 1.0 coerced to int and 0.5 kept
+    fractional."""
     p3d = build_cube_p3d(fork)
     lod = p3d.lods[0]
     sel = lod.new_selection("lf_weights")
@@ -62,13 +64,13 @@ def test_w_pos_weights_normalized(fork):
     by_idx = {rl.faces.index(fa): w for fa, w in rsel.faces.items()}
     assert by_idx[0] == 1 and by_idx[1] == 1
     assert abs(by_idx[2] - 0.5) <= 1.0 / 255 + 1e-9
-    # el dict del usuario NO se muta
+    # the caller's dict is NOT mutated
     assert sel.faces[lod.faces[1]] == 1.0
 
 
 @pytest.mark.parametrize("bad", [1.5, -0.25, 2, "x", None])
 def test_w_neg_invalid_weight_early_valueerror(fork, bad):
-    """W-NEG: weight invalido -> ValueError temprano nombrando la selection."""
+    """An invalid weight raises ValueError early, naming the selection."""
     p3d = build_cube_p3d(fork)
     lod = p3d.lods[0]
     sel = lod.new_selection("lf_bad")
@@ -80,9 +82,9 @@ def test_w_neg_invalid_weight_early_valueerror(fork, bad):
 
 
 def test_w_upstream_crashes_late_and_cryptic(upstream):
-    """Documenta el claim del plan: upstream revienta TARDE con TypeError
-    criptico (bytes() sobre float) para el weight 1.0 — el fork lo convierte
-    en exito (coercion) y los invalidos en ValueError temprano."""
+    """Upstream blows up LATE, with a cryptic TypeError from bytes() over a
+    float, for the weight 1.0. This fork turns that into success by
+    coercing it, and turns invalid weights into an early ValueError."""
     p3d = build_cube_p3d(upstream)
     lod = p3d.lods[0]
     sel = upstream.Selection(lod.points, lod.faces)
@@ -107,10 +109,11 @@ def test_prop_pos_63_bytes_roundtrip_exact(fork):
 @pytest.mark.parametrize("key,value", [
     ("class", "x" * 70),     # valor largo
     ("k" * 64, "house"),     # clave larga
-    ("class", "y" * 64),     # 64 exactos: perderia el NUL terminator
+    ("class", "y" * 64),     # exactly 64: it would lose the NUL terminator
 ])
 def test_prop_neg_over_63_bytes_raises(fork, key, value):
-    """PROP-NEG: clave/valor >=64 bytes utf-8 -> ValueError (antes truncaba)."""
+    """A key or value of 64 or more UTF-8 bytes raises ValueError; it used to
+    truncate."""
     p3d = build_cube_p3d(fork)
     p3d.lods[0].properties[key] = value
     with pytest.raises(ValueError) as ei:
@@ -119,13 +122,13 @@ def test_prop_neg_over_63_bytes_raises(fork, key, value):
 
 
 def test_prop_upstream_corrupts_silently_on_write(upstream):
-    """Documenta Quirk 6 (comportamiento REAL verificado): upstream ESCRIBE
-    sin quejarse un property >63 bytes (struct '64s' trunca y pierde el NUL
-    terminator) y el .p3d resultante ya NI SIQUIERA es re-legible — el read
-    revienta en el assert del NUL. Corrupcion silenciosa en write, fallo
-    diferido en read: exactamente lo que el guard del fork impide."""
+    """Verified upstream behaviour: it WRITES a property longer than 63
+    bytes without complaining - struct '64s' truncates it and loses the NUL
+    terminator - and the resulting .p3d is NOT EVEN readable again: the read
+    fails on the NUL assert. Silent corruption on write, deferred failure on
+    read: exactly what this fork's guard prevents."""
     p3d = build_cube_p3d(upstream)
     p3d.lods[0].properties["class"] = "x" * 70
-    data = write_bytes(p3d)  # upstream no se queja
+    data = write_bytes(p3d)  # upstream does not complain
     with pytest.raises(AssertionError):
-        read_p3d(upstream, data)  # el output esta corrupto
+        read_p3d(upstream, data)  # the output is corrupt

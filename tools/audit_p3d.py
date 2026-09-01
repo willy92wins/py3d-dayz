@@ -2,14 +2,14 @@
 """
 DayZ P3D Audit Script - Complete model validator (fork-delegated).
 
-Los checks de modelo viven ahora en py3d (fork DayZ >= 1.2.0) via
-P3D.validate(); este script conserva el CLI, el escaneo de LODs
-requeridos y los chequeos de archivos de texto. Depuracion aplicada:
-  - ids LOD normalizados a DayZ: ViewGeo=6e15, FireGeo=7e15; el slot
-    GeoPhys/2e13 y las menciones FireGeo~3e13 (stale) se RETIRAN;
-  - check de winding por centroide absoluto RETIRADO (D8): el fork aplica
-    el check RELATIVO vs Visual (cross-product);
-  - severidades: ERROR->CRITICAL, WARN->WARNING.
+The model checks now live in py3d (the DayZ fork, >= 1.2.0) behind
+P3D.validate(); this script keeps the CLI, the required-LOD scan and the
+text-file checks. What was pruned:
+  - LOD ids normalised to DayZ: ViewGeo=6e15, FireGeo=7e15; the
+    GeoPhys/2e13 slot and the stale FireGeo~3e13 mentions are WITHDRAWN;
+  - the absolute-centroid winding check is WITHDRAWN: the fork applies the
+    RELATIVE cross-product check against the Visual LOD instead;
+  - severities: ERROR -> CRITICAL, WARN -> WARNING.
 
 Usage:
     python audit_p3d.py model.p3d [model2.p3d ...]
@@ -17,8 +17,8 @@ Usage:
     python audit_p3d.py model.p3d --model-cfg path/to/model.cfg
     python audit_p3d.py --scan-dir path/to/mod/
 
-Requires: py3d DayZ fork >= 1.2.0 (wheel vendorizada en la skill;
-NUNCA `pip install py3d` - el paquete PyPI es otra libreria).
+Requires: the py3d DayZ fork >= 1.2.0. NEVER `pip install py3d` - that
+name on PyPI belongs to an unrelated library.
 """
 
 import sys, os, re, glob, argparse
@@ -91,7 +91,7 @@ def check_p_drive_paths_in_file(filepath):
 
 
 def audit_p3d(filepath):
-    """Full audit of one P3D file. True si no hay CRITICAL."""
+    """Full audit of one P3D file. True when there is no CRITICAL."""
     print(f"\n{'='*70}")
     print(f"AUDITING P3D: {filepath}")
     print(f"{'='*70}")
