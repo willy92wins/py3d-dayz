@@ -89,10 +89,21 @@ python -m py3d diff     a.p3d b.p3d  # structural comparison
 - A full proxy lifecycle: `add_proxy` / `get_proxies(strict=True)` /
   `align_proxy` / `remove_proxy`, with explicit raw↔engine frame conversion.
 
+**Format fidelity**
+- Every `#UVSet#` beyond the first is read into `Vertex.uv_sets` and written
+  back in id order. Upstream dropped them on save: a skinned body that carried
+  two UV sets lost the second one (4,761,261 → 4,409,836 bytes).
+- A LOD without faces (Memory, LandContact) gets the empty `#UVSet#` tag that
+  Object Builder writes and BI-authored files carry; upstream omitted it.
+- `save(verify=True)`, `info` and `diff` compare the UV set ids of every LOD.
+
 **Write contract.** For valid canonical input the bytes written are identical to
-what upstream writes. Where upstream would have corrupted the file or crashed
-later, this fork raises instead. Do not assume `input_bytes == output_bytes` for
-input that was not canonical to begin with.
+what upstream writes, with one deliberate exception: a LOD without faces gets the
+empty `#UVSet#` tag (17 bytes) that upstream omits. Where upstream would have
+corrupted the file or crashed later, this fork raises instead. Do not assume
+`input_bytes == output_bytes` for input that was not canonical to begin with:
+tags are written in this library's order, not the source file's, and editor-state
+tags such as `#Selected#` are not preserved.
 
 ## Winding: read this before trusting any validator
 
@@ -118,9 +129,11 @@ turns a quad `[0,1,2,3]` into `[0,2,1,3]`, a crossed face.
 
 ## Status and known issues
 
-The library is used in a real modding pipeline, and 213 tests pass. It has also
-been through a deliberately adversarial audit, and **not every problem it found
-is fixed yet**. Before relying on this for anything you cannot redo, read
+The library is used in a real modding pipeline, and 241 tests pass -- 234 of them
+on a plain `pytest` run, plus the 7 CANON tests that need a local clone of
+upstream (see [Tests](#tests)). It has also been through a deliberately
+adversarial audit, and **not every problem it found is fixed yet**. Before
+relying on this for anything you cannot redo, read
 [KNOWN-ISSUES.md](KNOWN-ISSUES.md) — in particular the entries about
 `save(verify=True)`, `python -m py3d diff` and the Recipe JSON round-trip, which
 are weaker than their names suggest.
