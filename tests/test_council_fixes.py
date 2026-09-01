@@ -72,11 +72,11 @@ def test_asciiz_sin_nul_lanza_en_vez_de_colgar():
     t.join(5.0)
 
     assert not t.is_alive(), (
-        "_read_asciiz sigue colgado tras 5s con un asciiz sin NUL: el bucle "
-        "'while b\"\\0\" not in bts' no termina porque read() devuelve b'' "
-        "indefinidamente en EOF")
+        "_read_asciiz is still hung after 5s on an asciiz with no NUL: the "
+        "loop 'while b\"\\0\" not in bts' never ends, because read() keeps "
+        "returning b'' at EOF")
     assert box.get("res") not in (None, "returned"), (
-        "_read_asciiz devolvio en vez de lanzar ante un asciiz sin NUL")
+        "_read_asciiz returned instead of raising on an asciiz with no NUL")
 
 
 def test_asciiz_valido_sigue_funcionando():
@@ -102,18 +102,18 @@ def test_mensaje_de_winding_no_recomienda_el_swap_que_cruza_quads():
     model.lods += [vis, geo]
 
     msgs = [f.msg for f in model.validate() if "WINDING" in f.code]
-    assert msgs, "no se emitio ningun finding de winding en el caso inverso"
+    assert msgs, "no winding finding was emitted for the inverted case"
     for msg in msgs:
         # The predicate looks for the imperative RECOMMENDATION
         # ("Fix: swap ..."), not any mention: the corrected message names
         # the swap precisely to warn against it, which is what we want.
         assert "Fix: swap vertices" not in msg, (
-            "el mensaje sigue recomendando el swap de vertices[1]/[2], que "
-            "en un quad [0,1,2,3] produce [0,2,1,3] (cara CRUZADA, no "
-            "invertida): %r" % msg)
+            "the message still recommends swapping vertices[1] and [2], "
+            "which on a quad [0,1,2,3] gives [0,2,1,3] - a CROSSED face, "
+            "not an inverted one: %r" % msg)
     assert any("reverse()" in m for m in msgs), (
-        "ningun mensaje de winding recomienda face.vertices.reverse(), que "
-        "es el correctivo valido para cualquier cardinalidad")
+        "no winding message recommends face.vertices.reverse(), which is "
+        "the remedy that works for any number of vertices")
 
 
 # ------------------------------------------------------------- FIX-3
@@ -128,8 +128,8 @@ def test_inversion_global_de_todos_los_lods_se_detecta():
     codes = _codes(_model_visual_plus_geometry(invert_all=True))
     winding = [c for c in codes if "WINDING" in c]
     assert winding, (
-        "modelo con TODOS los LODs invertidos (bug Blender Z-up -> Y-up) no "
-        "produjo ningun finding de winding; codes=%r" % codes)
+        "a model with EVERY LOD inverted - the Blender Z-up to Y-up bug - "
+        "produced no winding finding at all; codes=%r" % codes)
 
 
 def test_modelo_sano_no_produce_falso_positivo_de_winding():
@@ -137,7 +137,7 @@ def test_modelo_sano_no_produce_falso_positivo_de_winding():
     codes = _codes(_model_visual_plus_geometry(invert_all=False))
     errores = [c for c in codes if "WINDING" in c and c.startswith("ERR")]
     assert not errores, (
-        "modelo sano marcado con ERROR de winding: %r (codes=%r)"
+        "a healthy model was flagged with a winding ERROR: %r (codes=%r)"
         % (errores, codes))
 
 
@@ -156,10 +156,10 @@ def test_la_senal_de_normal_declarada_distingue_ambos_sentidos():
     pct_inv = py3d._pct_normal_agreement(invertido)
 
     assert pct_sano == pytest.approx(100.0), (
-        "cubo sano deberia dar 100%% de acuerdo winding<->normal declarada, "
-        "dio %r" % pct_sano)
+        "a healthy cube should agree 100%% between winding and declared "
+        "normal, got %r" % pct_sano)
     assert pct_inv == pytest.approx(0.0), (
-        "cubo con winding invertido deberia dar 0%%, dio %r" % pct_inv)
+        "a cube with inverted winding should give 0%%, got %r" % pct_inv)
 
 
 def test_coherencia_de_aristas_en_malla_cerrada():

@@ -37,10 +37,11 @@ def _assert_weight(expected, got, ctx):
     if isinstance(expected, float) and expected in (0.0, 1.0):
         expected = int(expected)  # the fork coerces these on write
     if isinstance(expected, int):
-        assert got == expected, "%s: weight int %r -> %r" % (ctx, expected, got)
+        assert got == expected, \
+            "%s: integer weight %r came back as %r" % (ctx, expected, got)
     else:
         assert abs(got - expected) <= FRAC + 1e-9, \
-            "%s: weight fraccional %r -> %r" % (ctx, expected, got)
+            "%s: fractional weight %r came back as %r" % (ctx, expected, got)
 
 
 def assert_sem_inv(m, model, data=None):
@@ -55,7 +56,8 @@ def assert_sem_inv(m, model, data=None):
         data = write_bytes(model)
     reread = read_p3d(m, data)
 
-    assert len(reread.lods) == len(model.lods), "n LODs cambio en round-trip"
+    assert len(reread.lods) == len(model.lods), \
+        "the number of LODs changed across the round trip"
 
     for li, (a, b) in enumerate(zip(model.lods, reread.lods)):
         ctx = "LOD[%d]" % li
@@ -85,14 +87,14 @@ def assert_sem_inv(m, model, data=None):
             assert b.uv_set_ids() == a.uv_set_ids(), ctx + ": uv_set_ids"
 
         assert list(b.selections.keys()) == list(a.selections.keys()), \
-            ctx + ": nombres/orden de selections"
+            ctx + ": selection names or their order"
         for name in a.selections:
             sa, sb = a.selections[name], b.selections[name]
             pa_idx, fa_idx = _sel_indices(a, sa)
             pb_idx, fb_idx = _sel_indices(b, sb)
             sctx = "%s selection '%s'" % (ctx, name)
-            assert pb_idx == pa_idx, sctx + ": membership de puntos"
-            assert fb_idx == fa_idx, sctx + ": membership de caras"
+            assert pb_idx == pa_idx, sctx + ": point membership"
+            assert fb_idx == fa_idx, sctx + ": face membership"
             for p, w in sa.points.items():
                 w2 = sb.points[b.points[a.points.index(p)]]
                 _assert_weight(w, w2, sctx)
@@ -103,7 +105,7 @@ def assert_sem_inv(m, model, data=None):
         assert dict(b.properties) == dict(a.properties), ctx + ": properties"
 
         if a.mass is None:
-            assert b.mass is None, ctx + ": masa deberia ser None"
+            assert b.mass is None, ctx + ": mass should be None"
         else:
             assert b.mass is not None and abs(b.mass - a.mass) <= 1e-3, \
                 ctx + ": Smasa (%r vs %r)" % (a.mass, b.mass)
