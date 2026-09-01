@@ -1,5 +1,5 @@
-"""S2 (F2-12): validate() v1.2.0 — un negativo por codigo (1:1) y paridad
-VAL-AUDIT con tools/audit_p3d.py (audit depurado, scripts del fork)."""
+"""validate() 1.2.0: one negative per finding code, and parity with
+tools/audit_p3d.py."""
 
 import os
 import subprocess
@@ -19,7 +19,7 @@ def codes(findings):
 
 # ---- mutadores: cada uno produce exactamente los codigos esperados ----------
 
-# F4-01 (council 2026-08-12): estos tres mutantes ahora emiten TAMBIEN los
+# estos tres mutantes ahora emiten TAMBIEN los
 # codigos del check absoluto (_check_winding_absolute). No es ruido
 # duplicado: el relativo dice "difiere del Visual" y el absoluto dice
 # "contradice sus propias normales", que se diagnostican y se arreglan

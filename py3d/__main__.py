@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-r"""CLI del fork py3d (S2: F2-09/F2-10/F2-11).
+r"""Py3d command line.
 
-    python -m py3d info <p3d>          # readback de evidencia (Step-0)
-    python -m py3d validate <p3d>      # findings de P3D.validate()
-    python -m py3d diff <a> <b>        # verificacion de ediciones
+    python -m py3d info <p3d> # readback de evidencia (Step-0)
+    python -m py3d validate <p3d> # findings de P3D.validate()
+    python -m py3d diff <a> <b> # verificacion de ediciones
 
 Schema de salida ESTABLE (lineas "clave: valor"; los tests lo fijan):
 cambiarlo es un cambio de contrato y requiere bump de version.
@@ -11,20 +11,20 @@ cambiarlo es un cambio de contrato y requiere bump de version.
 compara los ids de UV set por LOD (`diff.lod.N.uv_sets`).
 
 Exit codes:
-    info:     0 ok                       | 2 input no legible
-    validate: 0 limpio (sin ERROR)       | 1 ERRORs | 2 no legible
-    diff:     0 iguales | 1 difieren     | 2 input no legible
+    info: 0 ok | 2 input no legible
+    validate: 0 limpio (sin ERROR) | 1 ERRORs | 2 no legible
+    diff: 0 iguales | 1 difieren | 2 input no legible
 
-Trazabilidad (R22-P2-06): `info` cubre el readback que el pipeline exige
-como evidencia (LODs, resoluciones, conteos, Component01, materiales);
-`diff` cubre la verificacion de ediciones (fixtures R26, gates INTEG).
+`info` is the readback a pipeline can keep as evidence (LODs, resolutions,
+counts, Component01, materials); `diff` is for checking that an edit did
+what it was meant to - within the limits KNOWN-ISSUES.md documents.
 """
 
 import argparse
 import os
 import sys
 
-from . import P3D, LOD_RESOLUTIONS  # noqa: F401  (superficie estable)
+from . import P3D, LOD_RESOLUTIONS  # noqa: F401 (superficie estable)
 
 
 def _fmt(x):

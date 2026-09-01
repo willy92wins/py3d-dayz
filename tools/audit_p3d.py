@@ -2,10 +2,9 @@
 """
 DayZ P3D Audit Script - Complete model validator (fork-delegated).
 
-S2 rollout (plan py3d-fork F2-12 + Paso 3.4): los checks de modelo viven
-ahora en py3d (fork DayZ >= 1.2.0) via P3D.validate(); este script
-conserva el CLI, el escaneo de LODs requeridos y los chequeos de archivos
-de texto. Depuracion aplicada (R22-P2-04):
+Los checks de modelo viven ahora en py3d (fork DayZ >= 1.2.0) via
+P3D.validate(); este script conserva el CLI, el escaneo de LODs
+requeridos y los chequeos de archivos de texto. Depuracion aplicada:
   - ids LOD normalizados a DayZ: ViewGeo=6e15, FireGeo=7e15; el slot
     GeoPhys/2e13 y las menciones FireGeo~3e13 (stale) se RETIRAN;
   - check de winding por centroide absoluto RETIRADO (D8): el fork aplica
@@ -124,7 +123,7 @@ def audit_p3d(filepath):
 
     all_issues.extend(check_required_lods(lod_map))
 
-    # Checks de modelo: delegados al fork (F2-12, paridad depurada).
+    # Checks de modelo: delegados al fork (paridad depurada).
     for f in p.validate():
         sev = _SEV.get(f.severity, f.severity)
         lod_tag = "" if f.lod is None else "LOD[%d] " % f.lod

@@ -1,4 +1,5 @@
-"""Helpers de contrato D4 para los tests (CANON nivel 1, SEM-INV nivel 2)."""
+"""Contract helpers for the tests: byte-identity against upstream, and
+the semantic invariants of a round trip."""
 
 import hashlib
 import io
@@ -34,7 +35,7 @@ def _sel_indices(lod, sel):
 
 def _assert_weight(expected, got, ctx):
     if isinstance(expected, float) and expected in (0.0, 1.0):
-        expected = int(expected)  # coercion F1-02 esperada en el fork
+        expected = int(expected)  # the fork coerces these on write
     if isinstance(expected, int):
         assert got == expected, "%s: weight int %r -> %r" % (ctx, expected, got)
     else:
@@ -43,7 +44,7 @@ def _assert_weight(expected, got, ctx):
 
 
 def assert_sem_inv(m, model, data=None):
-    """D4 nivel 2: write -> reopen -> invariantes vs el modelo en memoria.
+    """Write -> reopen -> invariants against the in-memory model.
 
     Counts por LOD, resolucion (f32), coords (f32), caras (vertices,
     texture, material, uv), selections (nombres, membership POSICIONAL,

@@ -1,13 +1,13 @@
-"""Tests de la correctiva del council 2026-08-12 (3 defectos CRITICOS).
+"""The three critical defects the August 2026 adversarial audit found.
 
 Cada test se escribio para fallar ANTES del fix correspondiente:
 
-  FIX-1  _read_asciiz colgaba el proceso ante EOF sin NUL (heredado de
+  FIX-1 _read_asciiz colgaba el proceso ante EOF sin NUL (heredado de
          upstream 7acd58b). El test lleva timeout propio: si el fix no esta,
          falla por timeout en vez de colgar la suite entera.
-  FIX-2  el mensaje de ERR_WINDING_INVERTED recomendaba "swap vertices[1]
+  FIX-2 el mensaje de ERR_WINDING_INVERTED recomendaba "swap vertices[1]
          and vertices[2]", que invierte un triangulo pero CRUZA un quad.
-  FIX-3  el check de winding era relativo al Visual LOD y basado en el
+  FIX-3 el check de winding era relativo al Visual LOD y basado en el
          centroide (asume convexidad): con TODOS los LODs invertidos todo
          era coherente entre si y validate() devolvia [].
 """

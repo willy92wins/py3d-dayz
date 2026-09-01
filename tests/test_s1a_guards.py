@@ -1,4 +1,5 @@
-"""S1A: guards F1-01 (Selection ctor), F1-02 (weights), F1-06 (properties)."""
+"""Anti-corruption guards: the Selection constructor, weight validation
+on write, and the property length limit."""
 
 import io
 
@@ -8,7 +9,7 @@ from builders import build_cube_p3d
 from helpers import read_p3d, write_bytes
 
 
-# ---- F1-01 / Q1 -------------------------------------------------------------
+# ---- Selection constructor -------------------------------------------------------------
 
 def test_q1_neg_selection_noargs_raises_actionable(fork):
     """Q1-NEG: Selection() sin args -> TypeError con mensaje guia."""
@@ -44,7 +45,7 @@ def test_q1_pos_factory_registers_and_roundtrips(fork):
     assert len(rl.selections["lf_extra"].points) == 0
 
 
-# ---- F1-02 / W --------------------------------------------------------------
+# ---- selection weights --------------------------------------------------------------
 
 def test_w_pos_weights_normalized(fork):
     """W-POS: {1, 1.0, 0.5} -> round-trip con 1.0 coercionado y 0.5 fraccional."""
@@ -91,7 +92,7 @@ def test_w_upstream_crashes_late_and_cryptic(upstream):
         write_bytes(p3d)
 
 
-# ---- F1-06 / PROP -----------------------------------------------------------
+# ---- #Property# length -----------------------------------------------------------
 
 def test_prop_pos_63_bytes_roundtrip_exact(fork):
     """PROP-POS: valor de 63 bytes -> round-trip exacto."""
@@ -122,7 +123,7 @@ def test_prop_upstream_corrupts_silently_on_write(upstream):
     sin quejarse un property >63 bytes (struct '64s' trunca y pierde el NUL
     terminator) y el .p3d resultante ya NI SIQUIERA es re-legible — el read
     revienta en el assert del NUL. Corrupcion silenciosa en write, fallo
-    diferido en read: exactamente lo que el guard F1-06 del fork impide."""
+    diferido en read: exactamente lo que el guard del fork impide."""
     p3d = build_cube_p3d(upstream)
     p3d.lods[0].properties["class"] = "x" * 70
     data = write_bytes(p3d)  # upstream no se queja

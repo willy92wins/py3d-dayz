@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-r"""py3d-dayz - read and write Arma/DayZ .p3d files (MLOD).
+r"""Py3d-dayz - read and write Arma/DayZ .p3d files (MLOD).
 
 A maintained fork of https://github.com/KoffeinFlummi/py3d (master 7acd58b,
 MIT, unmaintained since 2018) by Felix "KoffeinFlummi" Wiegand, whose
@@ -75,11 +75,11 @@ def _read_asciiz(f, encoding="utf-8"):
 
 
 # ---------------------------------------------------------------------------
-# S2 (F2-01): constantes LOD DayZ canonicas.
+# Canonical DayZ LOD constants.
 #
-# Fuente consolidada (plan F2-01): dayz-model-pipeline/references/
-# lods-and-geometry.md + dayz-p3d-inspector (extract.py:32-46,
-# build.py:80-96), verificados contra MLODs reales. Sustituye a las 4
+# Consolidated from the DayZ modelling notes and the p3d inspector
+# (extract.py:32-46, build.py:80-96 - a separate tool, not in this
+# repository), verified against real MLODs. Replaces the 4
 # copias historicas del mapa resolucion->LOD, que usaban tolerancias
 # absolutas DISTINTAS (+-1e11, +-5e13, +-1e13 y rangos ad-hoc): aqui hay
 # UNA tolerancia relativa.
@@ -100,7 +100,7 @@ LOD_RESOLUTIONS = collections.OrderedDict([
     ("fire_geometry", 7.0e15),
 ])
 
-#: |res - canon| <= LOD_RELATIVE_TOLERANCE * canon  =>  ese kind.
+#: |res - canon| <= LOD_RELATIVE_TOLERANCE * canon => ese kind.
 LOD_RELATIVE_TOLERANCE = 0.05
 
 #: Niveles de detalle visuales (0.0, 1.0, 2.0, 4.0, 8.0, ...).
@@ -109,8 +109,8 @@ VISUAL_RESOLUTION_MAX = 1.0e3
 SHADOWVOLUME_RESOLUTION_MIN = 1.0e4
 SHADOWVOLUME_RESOLUTION_MAX = 2.0e4
 
-#: F3-02: Blender Z-up -> DayZ Y-up, (x,y,z) -> (x,z,-y). det=+1 (rotacion
-#: propia): NO invierte winding (LL-020; "siempre invertir tras rotar" es el
+#: Blender Z-up -> DayZ Y-up, (x,y,z) -> (x,z,-y). det=+1 (rotacion
+#: propia): NO invierte winding ("siempre invertir tras rotar" es el
 #: bug). Uso: p3d.transform(py3d.BLENDER_TO_DAYZ).
 BLENDER_TO_DAYZ = (
     (1.0, 0.0, 0.0),
@@ -129,7 +129,7 @@ _GEOMETRY_CLASS_KINDS = ("geometry", "view_geometry", "fire_geometry")
 
 
 def classify_lod_resolution(resolution):
-    """F2-01: kind canonico de una resolucion MLOD, o None si desconocida.
+    """Kind canonico de una resolucion MLOD, o None si desconocida.
 
     Kinds: "visual", "shadowvolume" y las claves de LOD_RESOLUTIONS.
     """
@@ -144,14 +144,15 @@ def classify_lod_resolution(resolution):
 
 
 # ---------------------------------------------------------------------------
-# S2 (F2-06): frame de proxy MLOD.
+# MLOD proxy frame.
 #
-# Port 1:1 (stdlib, sin numpy) de la convencion source-verified de
-# dayz-proxy-align/scripts/proxy_frame.py:
-#   - derive_frame()        -> proxy_frame.py:38-52  (ANGLE-SORT: el vertice
+# 1:1 port (stdlib, no numpy) of a source-verified convention. The
+# "proxy_frame.py:38-52" citations below name the script it was ported
+# from, which is a separate tool and not part of this repository.
+#   - derive_frame() -> proxy_frame.py:38-52 (ANGLE-SORT: el vertice
 #     de mayor angulo interior es el anchor; el medio -> +Y local; el menor
 #     -> +Z local; x = y X z; z = x X y re-ortogonalizado)
-#   - canonical_triangle()  -> proxy_frame.py:54-61  (anchor + scale*R[1] +
+#   - canonical_triangle() -> proxy_frame.py:54-61 (anchor + scale*R[1] +
 #     2*scale*R[2]: tres angulos DISTINTOS => frame inambiguo)
 # Fuente original: Arma3ObjectBuilder utilities/proxy.py + mrcmodding
 # gitbook "proxy coordinates" (leido 2026-05-31 por esa skill).
@@ -192,14 +193,14 @@ def _v_unit(v, fallback):
 
 
 def _mat_vec(m, v):
-    """F3-02: producto matriz 3x3 (row-major) x vector columna."""
+    """Producto matriz 3x3 (row-major) x vector columna."""
     return (m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
             m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
             m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2])
 
 
 def _det3(m):
-    """F3-02: determinante 3x3 por formula cerrada."""
+    """Determinante 3x3 por formula cerrada."""
     return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
             - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
             + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
@@ -300,7 +301,7 @@ def _validate_proxy_path_index(path, index):
 
 
 def _validate_transform_matrix(matrix):
-    """F3-02 (D-S3-6, R22-P1-02): forma 3x3 numerica + contrato
+    """Forma 3x3 numerica + contrato
     "ortogonal x escala uniforme" (columnas mutuamente ortogonales, normas
     iguales y no-cero, tolerancia relativa 1e-6). Fuera de contrato ->
     ValueError SIN mutar (las normales exigirian M^-T). Devuelve tuplas
@@ -399,10 +400,13 @@ def canonical_proxy_triangle(anchor, rotation=None, scale=0.001, space="raw"):
 
 
 # ---------------------------------------------------------------------------
-# S2 (F2-07): Recipe JSON v1 — capa de compatibilidad con dayz-p3d-inspector.
+# Recipe JSON v1 - compatibility layer for the DayZ p3d inspector.
 #
-# D7 (scoped): el schema del inspector ES la spec. Estos helpers son ports
-# 1:1 de p3d_inspector_extract.py / p3d_inspector_build.py (sin numpy).
+# The inspector's schema IS the specification here. These helpers are 1:1
+# ports of its extract.py / build.py (without numpy). Line references of
+# the form "extract.py:91-109" below point into those inspector scripts,
+# which are a separate tool and are NOT part of this repository; they are
+# kept because they record exactly which behaviour was reproduced.
 # El clasificador _recipe_lod_type reproduce VERBATIM los umbrales del
 # extractor (extract.py:55-88) — es deliberadamente DISTINTO de
 # classify_lod_resolution(): este modulo clasifica para el schema v1 del
@@ -412,7 +416,7 @@ def canonical_proxy_triangle(anchor, rotation=None, scale=0.001, space="raw"):
 #   - masa por punto NO viaja en el recipe; from_dict la reasigna con la
 #     politica de build (override/heuristica densidad) a geometry Y
 #     fire_geometry -> ERR_MASS_ONLY_GEOMETRY esperado en el rebuilt
-#     (LL-080; decision D-S3-8, parity verbatim);
+#     (se conserva a proposito, por paridad con el inspector);
 #   - flags de puntos/caras -> 0; pesos de selection -> 1;
 #   - resolution se "ajusta" a la canonica del tipo (build:108-112);
 #   - el Memory LOD se reconstruye desde recipe["memory_points"].
@@ -422,11 +426,11 @@ _RECIPE_WIREFRAME_TYPES = (
     "landcontact", "roadway", "paths", "hitpoints",
 )
 _RECIPE_BUILD_WIREFRAME_TYPES = _RECIPE_WIREFRAME_TYPES + ("shadow",)
-#: build.py masa geometry Y fire_geometry (port verbatim, D7). Decision
-#: 2026-06-07 (plan S3, D-S3-8): se CONSERVA por parity aunque LL-080
-#: prohibe #Mass# fuera de Geometry -> un modelo salido de from_dict
-#: dispara ERR_MASS_ONLY_GEOMETRY (RECIPE-IDEM lo pinea). Fix upstream
-#: pendiente en la skill del inspector (bug-ledger DayZ_Tooling).
+#: build.py assigns mass to geometry AND fire_geometry (ported verbatim).
+#: This is CONSERVED for parity even though #Mass# outside the Geometry
+#: LOD is wrong for DayZ -> a model produced by from_dict raises
+#: ERR_MASS_ONLY_GEOMETRY, and a test pins that. The fix belongs in the
+#: inspector, not here.
 _RECIPE_MASSED_TYPES = ("geometry", "fire_geometry")
 
 # build.py:80-96 (verbatim)
@@ -696,7 +700,7 @@ def _recipe_dedup_normals(per_vertex_normals):
 
 
 def _recipe_face_normal(positions, indices):
-    """Port de build.py:286-300 (cross product, D8)."""
+    """Port de build.py:286-300 (cross product)."""
     try:
         p0, p1, p2 = (positions[indices[0]], positions[indices[1]],
                       positions[indices[2]])
@@ -892,7 +896,9 @@ def _recipe_build_memory(recipe):
 
 
 # ---------------------------------------------------------------------------
-# S2 (F2-12): paridad DEPURADA con dayz-p3d-audit/scripts/audit_p3d.py.
+# Parity with the audit script shipped alongside this library, pruned to
+# the checks that survived review. "audit:104-171" below cites that
+# script, in tools/audit_p3d.py.
 #
 # Checks portados (lista cerrada del plan): winding relativo cross-product
 # (audit:104-171), Component01 naming/coverage (174-208), autocenter
@@ -953,7 +959,7 @@ def _pct_outward(lod):
 
 
 def _pct_normal_agreement(lod):
-    r"""F4-01 senal B: % de caras cuyo winding concuerda con su normal
+    r"""Senal B: % de caras cuyo winding concuerda con su normal
     DECLARADA.
 
     `cross(e1,e2) . normal_declarada` con AMBOS vectores en el mismo
@@ -999,7 +1005,7 @@ def _pct_normal_agreement(lod):
 
 
 def _pct_edge_coherence(lod):
-    r"""F4-01 senal A: % de aristas compartidas recorridas en sentidos
+    r"""Senal A: % de aristas compartidas recorridas en sentidos
     opuestos por sus dos caras.
 
     Puramente topologica: ni centroides, ni normales, ni convexidad. En una
@@ -1039,7 +1045,7 @@ def _pct_edge_coherence(lod):
 
 
 def _check_winding_absolute(lod, lod_index, kind_label):
-    r"""F4-01 (council 2026-08-12): winding ABSOLUTO de un LOD, sin
+    r"""Winding ABSOLUTO de un LOD, sin
     compararlo con ningun otro.
 
     Cierra el falso negativo que motivo el fork: `_check_winding_vs_visual`
@@ -1088,7 +1094,7 @@ def _check_winding_absolute(lod, lod_index, kind_label):
 def _check_winding_vs_visual(lod, lod_index, visual_lod, kind_label):
     """Port depurado de audit_p3d.check_winding_vs_visual (104-171).
 
-    OJO (F4-01): este check es RELATIVO al Visual LOD y se apoya en
+    OJO: este check es RELATIVO al Visual LOD y se apoya en
     `_pct_outward`, que asume geometria convexa. NO puede detectar una
     inversion global ni distinguir una caja hueca correcta de una rota.
     Se conserva por compatibilidad de codigos; la senal que si discrimina
@@ -1302,24 +1308,24 @@ def _check_pdrive_faces(lod, lod_index):
 
 
 def _lod_has_mass_tagg(lod):
-    """F3-01: True si el LOD emitira tagg #Mass# al escribir (LL-080).
+    """True si el LOD emitira tagg #Mass# al escribir.
 
-    Espejo del pseudocodigo dayz-p3d-audit/SKILL.md:548-552. NO usar el
+    Espejo del pseudocodigo del audit script. NO usar el
     property LOD.mass como predicado: con masa PARCIAL (mezcla 0.0/None)
-    sum() lanza TypeError (R22-P1-01).
+    sum() lanza TypeError.
     """
     return any(p.mass is not None for p in lod.points)
 
 
 def _check_mass_only_geometry(lod, lod_index):
-    """F3-01 (BUG-021): tagg #Mass# fuera del Geometry LOD -> ERROR.
+    """Tagg #Mass# fuera del Geometry LOD -> ERROR.
 
     Observado in-game en un quad custom: un #Mass# espurio en un LOD
     no-Geometry (aunque todos los valores sean 0.0) hace que binarize/
     AddonBuilder hornee la masa de ESE LOD -> ODOL con CoM=(0,0,0) e
-    inercia 0 -> ECE_PLACE_ON_SURFACE spawnea bajo tierra. Spec:
-    dayz-p3d-audit/SKILL.md:522-557. Aplica a TODO kind != "geometry",
-    incluida resolucion desconocida (kind None, D-S3-3).
+    inercia 0 -> ECE_PLACE_ON_SURFACE spawnea bajo tierra.
+    Aplica a TODO kind != "geometry",
+    incluida resolucion desconocida (kind None).
     """
     if lod.kind() == "geometry":
         return []
@@ -1337,7 +1343,7 @@ def _check_mass_only_geometry(lod, lod_index):
 
 
 class Finding:
-    """F1-09: resultado de P3D.validate(). severity: "ERROR" | "WARN"."""
+    """Resultado de P3D.validate(). severity: "ERROR" | "WARN"."""
 
     def __init__(self, code, severity, lod, msg):
         self.code = code
@@ -1446,7 +1452,7 @@ class Face:
 class Selection:
     def __init__(self, all_points=_REQUIRED, all_faces=_REQUIRED, f=None):
         if all_points is _REQUIRED or all_faces is _REQUIRED:
-            # F1-01: upstream's positional signature already made the no-arg
+            # upstream's positional signature already made the no-arg
             # form a TypeError; the fork freezes that behaviour with an
             # actionable message instead of a bare signature error.
             raise TypeError(
@@ -1464,7 +1470,7 @@ class Selection:
 
     @staticmethod
     def _normalize_weight(value, kind, name):
-        """F1-02: validate/normalize a selection weight at write time.
+        """Validate/normalize a selection weight at write time.
 
         Accepted: int 0/1, float exactly 0.0/1.0 (coerced to int), float
         strictly between 0 and 1 (upstream fractional encoding). Anything
@@ -1502,14 +1508,14 @@ class Selection:
 
     def write(self, f, name=None):
         label = "'%s'" % name if name is not None else "<unnamed>"
-        # F1-02: validate weights up-front (does not mutate user dicts).
+        # validate weights up-front (does not mutate user dicts).
         points = {p: self._normalize_weight(w, "point", name)
                   for p, w in self.points.items()}
         faces = {fa: self._normalize_weight(w, "face", name)
                  for fa, w in self.faces.items()}
 
-        # F1-05: keys deben pertenecer POR IDENTIDAD a las listas bindeadas;
-        # si no, su peso se serializaria como 0 en silencio (R22-P1-03).
+        # keys deben pertenecer POR IDENTIDAD a las listas bindeadas;
+        # si no, su peso se serializaria como 0 en silencio.
         point_ids = set(map(id, self.all_points))
         face_ids = set(map(id, self.all_faces))
         for p in points:
@@ -1588,7 +1594,7 @@ class LOD:
         return [0] + sorted(ids)
 
     def new_selection(self, name):
-        """F1-01 helper (fork API): get-or-create a selection correctly
+        """Helper (fork API): get-or-create a selection correctly
         bound to this LOD's point/face lists and registered under *name*.
         """
         existing = self.selections.get(name)
@@ -1599,7 +1605,7 @@ class LOD:
         return sel
 
     def faces_by_material(self, lower=True):
-        """F1-03: dict material -> [Face]. Claves en lower() por defecto
+        """Dict material -> [Face]. Claves en lower() por defecto
         (DayZ almacena lowercase; el tooling emite UPPER/MixedCase)."""
         out = collections.OrderedDict()
         for fa in self.faces:
@@ -1608,12 +1614,12 @@ class LOD:
         return out
 
     def faces_for_material(self, name):
-        """F1-03: caras cuyo material coincide case-insensitive con *name*."""
+        """Caras cuyo material coincide case-insensitive con *name*."""
         want = name.lower()
         return [fa for fa in self.faces if fa.material.lower() == want]
 
     def set_memory_point(self, name, coords):
-        """F1-04 (API NUEVA del fork): upsert de un memory point.
+        """Upsert de un memory point.
 
         Contrato real MLOD: punto en el LOD + selection de 1 punto con su
         nombre. Idempotente por nombre: si la selection existe, mueve su
@@ -1644,7 +1650,7 @@ class LOD:
         return p
 
     def get_memory_points(self):
-        """F1-04: {nombre: coords} de cada selection de exactamente 1 punto
+        """{nombre: coords} de cada selection de exactamente 1 punto
         y 0 caras (la forma canonica de un memory point)."""
         out = collections.OrderedDict()
         for name, sel in self.selections.items():
@@ -1654,13 +1660,13 @@ class LOD:
         return out
 
     def kind(self):
-        """F2-01: kind canonico DayZ de este LOD, o None si la resolucion
+        """Kind canonico DayZ de este LOD, o None si la resolucion
         no es reconocida (p.ej. ids legacy Arma 3 2e13/3e13/7e13 -
         validate() lo reporta como WARN_LOD_KIND_UNKNOWN)."""
         return classify_lod_resolution(self.resolution)
 
     def bbox(self):
-        """F2-02: ((minx,miny,minz), (maxx,maxy,maxz), centro).
+        """((minx,miny,minz), (maxx,maxy,maxz), centro).
 
         LOD sin puntos -> ValueError (un bbox (0,0,0) silencioso
         enmascara modelos vacios).
@@ -1677,13 +1683,13 @@ class LOD:
         return lo, hi, center
 
     def triangulate(self):
-        """F2-03: triangulacion fan in-place de los quads (quad -> 2 tris).
+        """Triangulacion fan in-place de los quads (quad -> 2 tris).
 
         Preserva UVs y normal_index por vertice, remapea la membership de
         TODAS las selections (quad -> sus 2 tris, mismo peso) y no toca
         lod.points/facenormals/sharp_edges (los indices de punto no
         cambian). Mutacion in-place de lod.faces: los bindings de las
-        selections (F1-05) siguen validos. Devuelve nº de quads divididos.
+        selections siguen validos. Devuelve nº de quads divididos.
         """
         quad_map = {}
         new_faces = []
@@ -1724,7 +1730,7 @@ class LOD:
         return split
 
     def make_double_sided(self):
-        """F3-03: duplica cada cara con orden de vertices invertido y
+        """Duplica cada cara con orden de vertices invertido y
         normal negada (twins) - para LODs VISUALES (flags, foliage,
         cloth visibles por ambos lados sin shader two-sided).
 
@@ -1736,10 +1742,8 @@ class LOD:
         crece solo en negadas nuevas (dedup por igualdad exacta de
         tupla). NO idempotente: dos llamadas cuadruplican. Orden
         garantizado con triangulate(): primero make_double_sided(),
-        despues triangulate() (el inverso no se testea). Referencia
-        original (make_double_sided.py, outputs 2026-04) perdida;
-        contrato fijado por plan S3 2026-06-07. Devuelve el numero de
-        caras anadidas.
+        despues triangulate() (el inverso no se testea). Devuelve el
+        numero de caras anadidas.
         """
         kind = self.kind()
         if kind != "visual":
@@ -1791,10 +1795,10 @@ class LOD:
         return len(originals)
 
     def set_selection(self, name, face_idx=None, point_idx=None, weight=1):
-        """F2-04: define la selection *name* por INDICES (overwrite
+        """Define la selection *name* por INDICES (overwrite
         idempotente: reemplaza la membership completa, nunca duplica).
 
-        weight invalido -> ValueError (mismo guard F1-02, validado aqui
+        weight invalido -> ValueError (validado aqui
         ANTES de mutar). Indice fuera de rango -> IndexError con contexto.
         """
         Selection._normalize_weight(weight, "selection", name)
@@ -1816,7 +1820,7 @@ class LOD:
         return sel
 
     def set_total_mass(self, kg):
-        """F2-05: reparte *kg* uniformemente entre los puntos de ESTE LOD
+        """Reparte *kg* uniformemente entre los puntos de ESTE LOD
         (llamalo sobre el Geometry LOD, que es donde el engine lee #Mass#).
 
         LOD sin puntos o kg negativo -> ValueError.
@@ -1833,7 +1837,7 @@ class LOD:
 
     def add_proxy(self, path, index=1, origin=(0.0, 0.0, 0.0),
                   rotation=None, scale=0.001, space="raw"):
-        """F2-06: anade un proxy MLOD canonico (triangulo inambiguo de
+        """Anade un proxy MLOD canonico (triangulo inambiguo de
         proxy_frame.py:54-61) como selection 'proxy:<path>.<index %03d>'.
 
         *rotation*: filas (x, y, z) local->world (identidad si None) -
@@ -2175,7 +2179,7 @@ class LOD:
         return name
 
     def get_proxies(self, strict=False):
-        """F2-06: lista de proxies de este LOD con su frame derivado por
+        """Lista de proxies de este LOD con su frame derivado por
         ANGLE-SORT (proxy_frame.py:38-52).
 
         Cada entrada: {name, path, index, anchor, frame (filas x,y,z),
@@ -2233,10 +2237,10 @@ class LOD:
 
     def validate_normals_budget(self, budget=32768, severity="WARN",
                                 lod_index=None):
-        """F1-07: presupuesto de facenormals por LOD (R22-P2-01).
+        """Presupuesto de facenormals por LOD.
 
-        WARN por defecto: el umbral 32768 es evidencia LOCAL (LL-028 +
-        crash KT Roadkill 2026-05-24), SIN fuente primaria BI confirmada.
+        WARN por defecto: el umbral 32768 sale de un crash observado en
+        un modelo propio, SIN fuente primaria de Bohemia que lo confirme.
         Usa severity="ERROR" solo si tu proyecto lo trata como contrato.
         Metrica exacta: len(lod.facenormals).
         """
@@ -2251,7 +2255,7 @@ class LOD:
             "local evidence, no confirmed primary source)" % (n, budget))]
 
     def _scan_findings(self, lod_index):
-        """F1-09: escaneo NO-raising de selections y properties."""
+        """Escaneo NO-raising de selections y properties."""
         findings = []
         point_ids = set(map(id, self.points))
         face_ids = set(map(id, self.faces))
@@ -2428,8 +2432,8 @@ class LOD:
                 f.write(struct.pack("<LL", *se))
 
         for k, v in self.selections.items():
-            # F1-05: la selection debe seguir bindeada a LAS listas actuales
-            # del LOD (reemplazarlas deja la selection stale - R22-P1-03).
+            # la selection debe seguir bindeada a LAS listas actuales
+            # del LOD (reemplazarlas deja la selection stale).
             if v.all_points is not self.points or v.all_faces is not self.faces:
                 raise RuntimeError(
                     "selection %r: stale binding - its all_points/all_faces "
@@ -2444,7 +2448,7 @@ class LOD:
         for k, v in self.properties.items():
             key_bytes = bytes(k, "utf-8")
             value_bytes = bytes(v, "utf-8")
-            # F1-06: upstream struct.pack("64s64s") silently truncates
+            # upstream struct.pack("64s64s") silently truncates
             # anything longer (and a 64-byte value loses its NUL
             # terminator, corrupting the read side). Quirk 6.
             if len(key_bytes) > 63 or len(value_bytes) > 63:
@@ -2515,7 +2519,7 @@ class P3D:
             l.write(f)
 
     def _verify_against(self, reread):
-        """F1-08: invariantes estructurales del verify (SEM-INV minimo)."""
+        """Invariantes estructurales del verify (SEM-INV minimo)."""
         if len(reread.lods) != len(self.lods):
             raise ValueError("verify: LOD count differs")
         for i, (a, b) in enumerate(zip(self.lods, reread.lods)):
@@ -2540,16 +2544,16 @@ class P3D:
                 raise ValueError("verify: mass differs in LOD %d" % i)
 
     def save(self, path, verify=True, backup_dir=None):
-        r"""F1-08: escritura atomica verificada (contrato Windows/POSIX).
+        r"""Escritura atomica verificada (contrato Windows/POSIX).
 
         Siempre: temp en el MISMO directorio -> flush + os.fsync(fd) ->
         close -> (verify) reopen + parse + invariantes estructurales ->
         backup opcional del archivo previo -> os.replace() atomico.
         Solo POSIX: fsync del directorio tras el replace. En Windows eso
         no es portable y se compensa con la verificacion reopen+parse
-        (runbook OneDrive / LL-033: verificar por CONTENIDO, no mtime).
+        (verificar por CONTENIDO, no por mtime).
         Si algo falla: raise; el archivo original queda byte-intacto y el
-        temp se elimina. R22-P2-03.
+        temp se elimina.
         """
         path = os.fspath(path)
         dirpath = os.path.dirname(os.path.abspath(path)) or "."
@@ -2584,7 +2588,7 @@ class P3D:
                 os.unlink(tmp_path)
 
     def get_lod(self, name):
-        """F2-01: primer LOD (en orden de archivo) cuyo kind() es *name*.
+        """Primer LOD (en orden de archivo) cuyo kind() es *name*.
 
         Acepta los kinds canonicos ("visual", "shadowvolume", claves de
         LOD_RESOLUTIONS) y los alias del pipeline ("viewgeo", "firegeo",
@@ -2602,18 +2606,18 @@ class P3D:
         return None
 
     def transform(self, matrix):
-        """F3-02: transforma TODO el modelo (in-place) con una matriz 3x3.
+        """Transforma TODO el modelo (in-place) con una matriz 3x3.
 
         Convencion column-vector: new_i = sum_j matrix[i][j] * old_j.
         Caso primario: py3d.BLENDER_TO_DAYZ (Blender Z-up -> DayZ Y-up,
         (x,y,z) -> (x,z,-y), det=+1).
 
-        Contrato (R25, D-S3-6): permutaciones de ejes / rotaciones /
+        Contrato: permutaciones de ejes / rotaciones /
         reflexiones / escala uniforme = matriz ortogonal x escalar.
         Cualquier otra (shear, escala no uniforme, singular) -> ValueError
         SIN mutar nada.
 
-        Winding (LL-020): det<0 (reflexion) invierte el handedness ->
+        Winding: det<0 (reflexion) invierte el handedness ->
         face.vertices.reverse() en TODAS las caras de TODOS los LODs (la
         normal geometrica cross-product vuelve a alinearse con la
         declarada M*n). det>0 (rotacion propia) NO invierte.
@@ -2639,7 +2643,7 @@ class P3D:
         return None
 
     def to_dict(self, source_path=None):
-        """F2-07 (D7, scoped): Recipe JSON schema v1 del inspector.
+        """Recipe JSON schema v1 del inspector.
 
         Port 1:1 de p3d_inspector_extract.extract_recipe (extract.py:
         313-423): meta, lods (geometry|wireframe|note por tipo),
@@ -2723,7 +2727,7 @@ class P3D:
 
     @classmethod
     def from_dict(cls, recipe):
-        """F2-07 (D7, scoped): construye un P3D desde un Recipe v1.
+        """Construye un P3D desde un Recipe v1.
 
         Port 1:1 de p3d_inspector_build.build_p3d (build.py:486-545) SIN
         el auto-fix de winding (eso queda en el script del inspector; aqui
@@ -2746,11 +2750,11 @@ class P3D:
         return model
 
     def _scan_v12_findings(self):
-        """F2-12: checks portados del audit (ver bloque de paridad)."""
+        """Checks portados del audit (ver bloque de paridad)."""
         findings = []
         visual = None
         visual_index = None
-        # F4-01: la referencia es el visual de MENOR resolucion (LOD0, el de
+        # la referencia es el visual de MENOR resolucion (LOD0, el de
         # mas detalle), no el primero que aparezca en el fichero: el orden de
         # LODs en disco no es normativo y cambiaba el veredicto.
         for i, lod in enumerate(self.lods):
@@ -2786,7 +2790,7 @@ class P3D:
                         lod, visual, visual_index))
             if k == "visual":
                 findings.extend(_check_pdrive_faces(lod, i))
-                # F4-01: tambien en el visual, o un modelo SOLO-visual (un
+                # tambien en el visual, o un modelo SOLO-visual (un
                 # prop simple sin LOD de colision) se quedaria sin ninguna
                 # comprobacion de winding.
                 findings.extend(_check_winding_absolute(lod, i, k))
@@ -2795,10 +2799,10 @@ class P3D:
     def validate(self, normals_budget=32768, normals_severity="WARN"):
         r"""Validador v1.2.0.
 
-        Codigos v1.1.0 (F1-09): ERR_SELECTION_STALE, ERR_WEIGHT_RANGE,
+        Codigos v1.1.0: ERR_SELECTION_STALE, ERR_WEIGHT_RANGE,
         WARN_NORMALS_BUDGET, WARN_PROPERTY_TRUNCATION,
         ERR_UNREADABLE_ROUNDTRIP.
-        Codigos v1.2.0 (F2-12, paridad depurada con dayz-p3d-audit; ver
+        Codigos v1.2.0 (paridad depurada con el audit script; ver
         bloque "_check_*"): ERR_WINDING_INVERTED, WARN_WINDING_MIXED,
         WARN_WINDING_LOWCONF, ERR_COMPONENT_NAMING, WARN_COMPONENT_NAMING,
         WARN_COMPONENT_COVERAGE, WARN_AUTOCENTER_MISSING,
@@ -2807,8 +2811,8 @@ class P3D:
         WARN_MEMORY_AXIS_SHORT, WARN_MEMORY_HAS_FACES,
         ERR_AXIS_SELECTION_MISSING, WARN_AXIS_SELECTION_EMPTY,
         WARN_PDRIVE_PATH, WARN_LOD_KIND_UNKNOWN.
-        Codigos v1.3.0 (F3-01, BUG-021): ERR_MASS_ONLY_GEOMETRY (#Mass#
-        en LOD no-Geometry => binarize hornea CoM=(0,0,0); LL-080).
+        Codigos v1.3.0: ERR_MASS_ONLY_GEOMETRY (#Mass# en un LOD
+        no-Geometry => binarize hornea CoM=(0,0,0)).
 
         Devuelve list[Finding]; NO lanza por hallazgos (si por mal uso de
         los parametros). El round-trip en memoria solo se intenta si no

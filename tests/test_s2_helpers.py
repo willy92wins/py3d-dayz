@@ -1,5 +1,5 @@
-"""S2: F2-01 (constantes LOD/kind/get_lod), F2-02 (bbox), F2-03
-(triangulate), F2-04 (set_selection), F2-05 (set_total_mass)."""
+"""LOD constants with kind() and get_lod(), plus bbox, triangulate,
+set_selection and set_total_mass."""
 
 import pytest
 
@@ -8,7 +8,7 @@ from builders import (build_cube_lod, build_cube_p3d, build_multilod_p3d,
 from helpers import read_p3d, write_bytes
 
 
-# ---- LOD-POS / LOD-NEG (F2-01) -----------------------------------------------
+# ---- LOD-POS / LOD-NEG -----------------------------------------------
 
 def test_lod_pos_get_lod_four_kinds(fork):
     """LOD-POS: multi-LOD -> get_lod x4 devuelve el LOD correcto."""
@@ -53,7 +53,7 @@ def test_lod_neg_unknown_and_legacy_arma(fork):
         p3d.get_lod("geophys")  # kind inexistente -> ValueError
 
 
-# ---- BBOX-POS / BBOX-NEG (F2-02) ---------------------------------------------
+# ---- BBOX-POS / BBOX-NEG ---------------------------------------------
 
 def test_bbox_pos_unit_cube(fork):
     """BBOX-POS: cubo unidad -> min/max/center exactos (tambien tras
@@ -73,7 +73,7 @@ def test_bbox_neg_empty_lod(fork):
         fork.LOD().bbox()
 
 
-# ---- TRI-POS (F2-03) ---------------------------------------------------------
+# ---- TRI-POS ---------------------------------------------------------
 
 def test_tri_pos_cube_with_selection(fork):
     """TRI-POS: cubo 6 quads + selection de 3 quads -> 12 tris, la
@@ -113,7 +113,7 @@ def test_tri_pos_cube_with_selection(fork):
     assert all(abs(w - 0.5) < 0.51 / 255 for w in got)
 
 
-# ---- SETSEL-POS / SETSEL-NEG (F2-04) -----------------------------------------
+# ---- SETSEL-POS / SETSEL-NEG -----------------------------------------
 
 def test_setsel_pos_idempotent_overwrite(fork):
     """SETSEL-POS: set_selection x2 mismo nombre -> overwrite, no duplica."""
@@ -131,7 +131,7 @@ def test_setsel_pos_idempotent_overwrite(fork):
 
 
 def test_setsel_neg_bad_weight_and_index(fork):
-    """SETSEL-NEG: weight 2.0 -> ValueError (guard F1-02); indice fuera
+    """SETSEL-NEG: weight 2.0 -> ValueError; indice fuera
     de rango -> IndexError. Sin mutacion parcial."""
     p3d = build_cube_p3d(fork)
     lod = p3d.lods[0]
@@ -144,7 +144,7 @@ def test_setsel_neg_bad_weight_and_index(fork):
     assert "bad" not in lod.selections
 
 
-# ---- MASS-POS (F2-05) --------------------------------------------------------
+# ---- MASS-POS --------------------------------------------------------
 
 def test_mass_pos_total_on_geometry(fork):
     """MASS-POS: set_total_mass(200) -> suma 200 +-1e-3 sobre los puntos
@@ -163,5 +163,5 @@ def test_mass_pos_total_on_geometry(fork):
 
 
 def test_s1_multilod_sigue_limpio(fork):
-    """Regresion: el fixture S1 sigue dando validate() == [] tras F2-12."""
+    """Regresion: el fixture sigue dando validate() == []."""
     assert build_multilod_p3d(fork).validate() == []

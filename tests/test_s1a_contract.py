@@ -1,4 +1,5 @@
-"""S1A: contrato D4 — CANON-IDENT (nivel 1) y SEM-INV (nivel 2)."""
+"""The write contract: byte-identical output against upstream, and the
+semantic invariants that must survive a round trip."""
 
 import io
 
@@ -49,7 +50,7 @@ def test_sem_inv_second_roundtrip_stable(fork, name, builder):
 
 
 def test_fixture_files_roundtrip(fork, tmp_path):
-    """make_fixtures genera .p3d legibles que cumplen SEM-INV desde disco."""
+    """Make_fixtures genera .p3d legibles que cumplen SEM-INV desde disco."""
     import make_fixtures
     out = make_fixtures.main(str(tmp_path))
     import os

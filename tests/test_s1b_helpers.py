@@ -1,4 +1,4 @@
-"""S1B: F1-03 (materiales case-insensitive) y F1-04 (memory points upsert)."""
+"""Case-insensitive material lookup, and the memory-point upsert."""
 
 import pytest
 
@@ -6,7 +6,7 @@ from builders import build_cube_p3d, build_memory_lod, build_multilod_p3d
 from helpers import read_p3d, write_bytes
 
 
-# ---- F1-03 / MAT ------------------------------------------------------------
+# ---- materials ------------------------------------------------------------
 
 def test_mat_pos_case_insensitive_lookup(fork):
     """MAT-POS: .p3d con materiales lowercase, query UPPER -> caras > 0."""
@@ -35,7 +35,7 @@ def test_mat_pos_faces_by_material_lower_keys(fork):
     assert "LF\\data\\MIXED_Case.rvmat" in raw
 
 
-# ---- F1-04 / MEM ------------------------------------------------------------
+# ---- memory points ------------------------------------------------------------
 
 def test_mem_pos_upsert_idempotent(fork):
     """MEM-POS: set_memory_point x2 mismo nombre -> 1 entrada, posicion = ultima."""
@@ -83,7 +83,7 @@ def test_mem_neg_preexisting_duplicate_collapses(fork):
 
 
 def test_mem_get_excludes_non_point_selections(fork):
-    """get_memory_points ignora selections con caras (proxy) o multipunto."""
+    """Get_memory_points ignora selections con caras (proxy) o multipunto."""
     p3d = build_multilod_p3d(fork)
     vis, geo, mem = p3d.lods
     assert "proxy:\\dz\\data\\proxies\\flag.001" not in vis.get_memory_points()

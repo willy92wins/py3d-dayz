@@ -38,8 +38,9 @@ def _load_upstream():
 
 @pytest.fixture(scope="session")
 def upstream():
-    """Upstream cargado por ruta (sin pip - D4 CANON). Si no esta disponible,
-    los tests CANON se omiten con motivo explicito (suite verde en P:\\ sin red)."""
+    """Upstream loaded by path, without pip. When it is not available the
+    CANON tests skip with an explicit reason, so the suite stays green
+    offline."""
     mod, why = _load_upstream()
     if mod is None:
         pytest.skip("CANON omitido: " + why)

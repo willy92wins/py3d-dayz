@@ -1,5 +1,5 @@
-"""S2: F2-06 (proxies, frame angle-sort de dayz-proxy-align) y
-F2-07 (Recipe JSON v1 scoped al inspector, D7)."""
+"""Proxies with the angle-sorted frame, and the Recipe JSON v1 layer
+scoped to what the inspector defines."""
 
 import json
 
@@ -14,7 +14,7 @@ from helpers import read_p3d, write_bytes
 ROT_Y90 = ((0.0, 0.0, -1.0), (0.0, 1.0, 0.0), (1.0, 0.0, 0.0))
 
 
-# ---- PROXY-POS (F2-06) -------------------------------------------------------
+# ---- PROXY-POS -------------------------------------------------------
 
 def test_proxy_pos_roundtrip_exact(fork):
     """PROXY-POS: add_proxy -> save -> get_proxies: path/index exactos,
@@ -78,7 +78,7 @@ def test_proxy_derive_canonical_inverse(fork):
             assert abs(R[j][k] - ROT_Y90[j][k]) < 1e-9
 
 
-# ---- RECIPE-IDEM (F2-07) -----------------------------------------------------
+# ---- RECIPE-IDEM -----------------------------------------------------
 
 def _deep_equal(a, b, tol=1e-6, path="$"):
     if isinstance(a, dict) and isinstance(b, dict):
@@ -96,7 +96,7 @@ def _deep_equal(a, b, tol=1e-6, path="$"):
 
 
 def test_recipe_idem_multilod_v2(fork):
-    """RECIPE-IDEM (contrato D7 = lo que extract/build hacen HOY):
+    """RECIPE-IDEM (lo que extract/build hacen HOY):
 
     - PUNTO FIJO: to_dict(from_dict(d)) se estabiliza tras UNA vuelta
       (el visual re-emite su pool de vertices deduplicado (pt,normal,uv);
@@ -119,9 +119,9 @@ def test_recipe_idem_multilod_v2(fork):
     # y el P3D reconstruido es un MLOD valido y limpio
     p2 = fork.P3D.from_dict(d2)
     reread = read_p3d(fork, write_bytes(p2))
-    # Decision 2026-06-07 (plan S3 v2, D-S3-8): from_dict conserva la
-    # politica de masa de build.py VERBATIM (geometry + fire_geometry, D7)
-    # -> el rebuilt dispara ERR_MASS_ONLY_GEOMETRY (LL-080) POR DISENO.
+    # Decision 2026-06-07: from_dict conserva la
+    # politica de masa de build.py VERBATIM (geometry + fire_geometry)
+    # -> el rebuilt dispara ERR_MASS_ONLY_GEOMETRY POR DISENO.
     # Pin EXACTO: si la politica cambia, este assert falla y la decision
     # se revisita conscientemente. Cualquier otro ERROR invalida el MLOD.
     errors = [f for f in reread.validate() if f.severity == "ERROR"]
@@ -158,7 +158,7 @@ def test_recipe_schema_v1_shape(fork):
 
 
 def test_recipe_from_dict_mass_policy(fork):
-    """from_dict reasigna masa con la politica de build (perdida scoped
+    """From_dict reasigna masa con la politica de build (perdida scoped
     del schema v1): heuristica por densidad ('stone' -> 2600 kg/m3 sobre
     bbox 1 m3 del cubo Geometry)."""
     p3d = build_multilod_v2_p3d(fork)

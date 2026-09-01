@@ -1,4 +1,4 @@
-"""S2: CLI F2-09 (info), F2-10 (validate), F2-11 (diff).
+"""The command line: info, validate and diff.
 
 Schema de salida ESTABLE: estos tests SON el contrato (cambiarlo = bump).
 Exit codes: info 0/2 - validate 0/1/2 - diff 0/1/2.
@@ -25,7 +25,7 @@ def write(fork, p3d, path):
     return str(path)
 
 
-# ---- CLI-INFO (F2-09) --------------------------------------------------------
+# ---- CLI-INFO --------------------------------------------------------
 
 def test_cli_info_schema_cube(fork, tmp_path):
     """CLI-INFO: schema estable linea a linea sobre el cubo."""
@@ -72,7 +72,7 @@ def test_cli_info_unreadable(fork, tmp_path):
     assert run_cli("info", str(tmp_path / "no.p3d")).returncode == 2
 
 
-# ---- CLI-VAL (F2-10) ---------------------------------------------------------
+# ---- CLI-VAL ---------------------------------------------------------
 
 def test_cli_validate_clean_and_broken(fork, tmp_path):
     """CLI-VAL: limpio exit 0 / winding roto exit 1 / no legible exit 2."""
@@ -88,7 +88,7 @@ def test_cli_validate_clean_and_broken(fork, tmp_path):
     r = run_cli("validate", broken)
     assert r.returncode == 1
     lines = r.stdout.splitlines()
-    # F4-01: invertir el Geometry LOD dispara DOS errores, el relativo al
+    # invertir el Geometry LOD dispara DOS errores, el relativo al
     # Visual y el absoluto contra sus propias normales. Se comprueban por
     # contenido y no por posicion: el orden de emision no es contrato.
     assert lines[0] == "findings: 2" and lines[-1] == "result: errors"
@@ -114,7 +114,7 @@ def test_cli_validate_warn_only_exit0(fork, tmp_path):
     assert "WARN_AUTOCENTER_MISSING" in r.stdout
 
 
-# ---- CLI-DIFF (F2-11) --------------------------------------------------------
+# ---- CLI-DIFF --------------------------------------------------------
 
 def test_cli_diff_moved_memory_point(fork, tmp_path):
     """CLI-DIFF: cubo vs cubo con 1 memory point movido -> exit 1 y la

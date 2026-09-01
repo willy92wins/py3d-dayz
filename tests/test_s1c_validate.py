@@ -1,4 +1,4 @@
-"""S1C: F1-07 (normals budget) y F1-09 (validate(), 5 codigos 1:1)."""
+"""The facenormals budget, and one negative per validate() finding code."""
 
 import pytest
 
@@ -71,7 +71,7 @@ def test_val_neg_unreadable_roundtrip(fork, monkeypatch):
     assert fs[0].lod is None and "membership" in fs[0].msg
 
 
-# ---- F1-07 / NORMALS ---------------------------------------------------------
+# ---- NORMALS ---------------------------------------------------------
 
 def test_normals_pos_at_budget_clean(fork):
     """NORMALS-POS: exactamente 32768 facenormals -> sin findings."""

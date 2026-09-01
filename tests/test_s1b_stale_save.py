@@ -1,4 +1,4 @@
-"""S1B: F1-05 (invariantes stale/foreign) y F1-08 (save atomico verificado)."""
+"""Stale and foreign selection bindings, and the verified atomic save."""
 
 import glob
 import os
@@ -9,7 +9,7 @@ from builders import build_cube_p3d, build_multilod_p3d
 from helpers import assert_sem_inv, sha256, write_bytes
 
 
-# ---- F1-05 / STALE ----------------------------------------------------------
+# ---- stale and foreign bindings ----------------------------------------------------------
 
 def test_stale_1_replaced_list_raises(fork):
     """STALE-1: reemplazo de lod.points tras crear la selection -> raise."""
@@ -54,7 +54,7 @@ def test_stale_3_append_after_create_is_defined(fork):
     assert rl.points[-1] not in rsel.points
 
 
-# ---- F1-08 / SAVE -----------------------------------------------------------
+# ---- atomic save -----------------------------------------------------------
 
 def _no_tmp_leftovers(dirpath):
     return glob.glob(os.path.join(str(dirpath), "*.tmp.*")) == []
@@ -72,7 +72,7 @@ def test_save_pos_atomic_verified(fork, tmp_path):
 
 
 def test_save_pos_backup_dir(fork, tmp_path):
-    """SAVE-POS (extension D4/F1-08): backup del archivo previo al sobrescribir."""
+    """SAVE-POS: backup del archivo previo al sobrescribir."""
     p3d = build_cube_p3d(fork)
     target = tmp_path / "stone.p3d"
     backups = tmp_path / "_backups"
@@ -108,7 +108,7 @@ def test_save_fail_original_intact(fork, tmp_path, monkeypatch):
 
 def test_save_fail_verify_catches_semantic_loss(fork, tmp_path, monkeypatch):
     """SAVE-FAIL (variante): el verify caza perdida SEMANTICA aunque el write
-    no reviente — selections vaciadas en el stream (sintoma LL-018)."""
+    no reviente — selections vaciadas en el stream."""
     p3d = build_cube_p3d(fork)
     target = tmp_path / "stone.p3d"
     p3d.save(str(target), verify=True)

@@ -1,4 +1,5 @@
-"""Module-agnostic synthetic model builders (D6: sin assets BI).
+"""Module-agnostic synthetic model builders. No Bohemia Interactive
+assets are used or required.
 
 Cada builder recibe el modulo py3d `m` (fork, o upstream cargado via
 PY3D_UPSTREAM_PATH) de modo que el MISMO modelo en memoria pueda
@@ -251,7 +252,7 @@ def build_multilod_p3d(m):
 
 
 def build_multilod_v2_p3d(m):
-    """S2: modelo completo y LIMPIO para validate() v1.2.0 e INTEG:
+    """Modelo completo y LIMPIO para validate() v1.2.0 e INTEG:
     Visual (icosfera + proxy) + Geometry (Component01, autocenter, class,
     masa 200) + ViewGeo + FireGeo + Memory (pos center, box_placing_min/
     max, dolly axis 2-puntos)."""
